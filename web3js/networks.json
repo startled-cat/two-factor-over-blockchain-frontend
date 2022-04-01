@@ -1,0 +1,17 @@
+{
+    "default": "mumbai",
+    "rinkeby": {
+        "explorer_api_key": "${ETHERSCAN_TOKEN}",
+        "contract_address": "${RINKEBY_CONTRACT_ADDRESS}",
+        "api_url": "https://api-rinkeby.etherscan.io/api",
+        "gateway_url": "https://rinkeby.infura.io/v3/${INFURA_API_KEY}",
+        "native_coin_price_api": "https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD"
+    },
+    "mumbai": {
+        "explorer_api_key": "${POLYGONSCAN_TOKEN}",
+        "contract_address": "${MUMBAI_CONTRACT_ADDRESS}",
+        "api_url": "https://api-testnet.polygonscan.com/api",
+        "gateway_url": "https://speedy-nodes-nyc.moralis.io/${MORALIS_API_KEY}/polygon/mumbai",
+        "native_coin_price_api": "https://min-api.cryptocompare.com/data/price?fsym=MATIC&tsyms=USD"
+    }
+}

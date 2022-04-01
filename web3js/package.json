@@ -1,0 +1,17 @@
+{
+  "name": "web3-learning",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/App.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/App.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.0.0",
+    "node-fetch": "^3.2.3",
+    "web3": "^1.7.1"
+  }
+}
