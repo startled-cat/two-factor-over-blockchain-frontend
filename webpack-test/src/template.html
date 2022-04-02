@@ -2,24 +2,46 @@
 <html>
 
 <head>
-    <meta charset="utf-8">
-    <title>
-        <%= htmlWebpackPlugin.options.title
-            %>
-    </title>
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1">
+	<meta charset="utf-8">
+	<title>
+		<%= htmlWebpackPlugin.options.title
+				%>
+	</title>
+
+
+	<!-- Bootstrap CSS -->
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+				rel="stylesheet"
+				integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
+				crossorigin="anonymous">
+
+
+
+	<meta name="viewport"
+				content="width=device-width, initial-scale=1">
 </head>
 
 <body>
-    <div class="container">
+	<div class="container">
+		<button id="connect"
+						class="btn btn-primary">Connect web3</button>
+		<div id="networks"></div>
 
-        <h3> works??? </h3>
-        <button id="getNetworkIdButton"
-                class="btn">get network id</button>
-        <div id="networkId"
-             class="joke"></div>
-    </div>
+		<h3 id="networkName"> ??? </h3>
+		<p><a id="contractUrl"></a></p>
+
+		<div id="gasPrice"
+				 class=""></div>
+
+		<button id="getOtpButton"
+						class="btn">getOtpButton</button>
+		<div id="gasOtp"
+				 class=""></div>
+
+
+		<div id="methods"
+				 class=""></div>
+	</div>
 </body>
 
 </html>
