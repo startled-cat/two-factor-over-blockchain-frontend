@@ -24,10 +24,7 @@ const initialize = async () => {
     document.getElementById("contractUrl").innerHTML = "Contract";
     let gas = await getGasPrice();
     document.getElementById("gasPrice").innerHTML = `gas price is ${window.web3.utils.fromWei(gas, "gwei")} gwei`;
-    document.getElementById("getOtpButton").onclick = async () => {
-        const otp = await makeContractCall(contract, "getNewOtp", []);
-        alert(`${otp}`);
-    };
+
     let coinPrice = await getCoinPrice(network_config);
     contract = await getContract(network_config);
 
@@ -55,8 +52,6 @@ const initialize = async () => {
 const setupEventListeners = async () => {
     window.ethereum.on('accountsChanged', async function (accounts) {
         console.log('accountsChanges', accounts);
-        initialize();
-
     });
 
     // detect Network account change
@@ -75,31 +70,32 @@ const ethEnabled = async () => {
         window.web3 = new Web3(window.ethereum);
         currentNetworkId = window.ethereum.networkVersion;
         console.log({ currentNetworkId });
-        connectBtn.disabled = true;
+
         return true;
+    } else if (windows.web3) {
+        window.web3 = new Web3(window.web3.currentProvider)
+        currentNetworkId = window.ethereum.networkVersion;
+        console.log({ currentNetworkId });
     }
-    connectBtn.disabled = false;
+
     return false;
 }
 
 const main = async () => {
     setupEventListeners();
 
-
-
     connectBtn.onclick = async () => {
+        connectBtn.disabled = true;
         let connected = await ethEnabled();
         if (connected) {
             initialize();
+
+        } else {
+            connectBtn.disabled = false;
         }
     }
-    let network_names = Object.keys(networks).filter(x => !x.includes("default"));
-    console.log({ network_names });
-
-
-
-
-    // initialize(networks[networks.default]);
+    let network_ids = Object.keys(networks).filter(x => !x.includes("default"));
+    console.log({ network_ids });
 }
 
 main();
