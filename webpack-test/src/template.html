@@ -25,22 +25,38 @@
 	<div class="container">
 		<button id="connect"
 				class="btn btn-primary">Connect web3</button>
-		<div id="networks"></div>
+		<button id="reload"
+				class="btn btn-primary">Reload contract config</button>
+
 
 		<h3 id="networkName"> ... </h3>
 		<p><a id="contractUrl"></a></p>
 
 		<div id="gasPrice"
 			 class=""></div>
-
-		<button id="getOtpButton"
-				class="btn">Get TFA password</button>
-		<div id="gasOtp"
+		<div id="coinPrice"
+			 class=""></div>
+		<div id="transactionPrice"
 			 class=""></div>
 
 
-		<div id="methods"
-			 class=""></div>
+
+		<div id="giveAccess">
+			<button id="checkAccessBtn"
+					class="btn btn-primary">
+				Check if access given
+			</button><button id="giveAccessBtn"
+					class="btn btn-primary">
+				Give access to this address
+			</button>
+			<input type="text"
+				   id="accessInput"
+				   value="0xD4D7593176b6C1015e0D8DF62E11a19e66912bFa">
+		</div>
+		<div id="givenAccess">
+
+		</div>
+		<div id="networks"></div>
 	</div>
 </body>
 

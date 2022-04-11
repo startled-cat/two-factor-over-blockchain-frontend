@@ -4,53 +4,56 @@ import { Contract } from 'web3-eth-contract';
 import { AbiItem } from 'web3-utils';
 import { BigNumber } from "bignumber.js";
 
-import { networks, NetworkConfig } from './Config';
+import { networks, NetworkConfig, accounts, abi_local } from './Config';
 
 export const DEFAULT_GAS_LIMIT = "2000000";
 
-export function getNetworkConfig(): NetworkConfig {
-    return networks[networks.default];
 
+export function loadAccounts(web3: Web3) {
+    accounts.forEach(acc => {
+        web3.eth.accounts.wallet.add(acc.pk);
+    })
 }
 export function getWeb3(network_config: NetworkConfig): Web3 {
     return new Web3(network_config.gateway_url);
 }
 
-export async function getCoinPrice(network_config: NetworkConfig): Promise<BigNumber> {
-    return new Promise((resolve, _reject) => {
-        axios.get(network_config.native_coin_price_api, {
-            headers: { 'Content-Type': 'application/json' }
-        })
-            .then((res) => res.data)
-            .then((json) => {
-                resolve(json["USD"]);
-            });
-    })
-}
+// export async function getCoinPrice(network_config: NetworkConfig): Promise<BigNumber> {
+//     return new Promise((resolve, _reject) => {
+//         axios.get(network_config.native_coin_price_api, {
+//             headers: { 'Content-Type': 'application/json' }
+//         })
+//             .then((res) => res.data)
+//             .then((json) => {
+//                 resolve(json["USD"]);
+//             });
+//     })
+// }
 
-export async function getAbi(network_config: NetworkConfig): Promise<AbiItem[]> {
-    return new Promise((resolve, _reject) => {
-        axios.get(network_config.api_url, {
-            headers: { 'Content-Type': 'application/json' },
-            params: {
-                module: "contract",
-                action: "getabi",
-                address: network_config.contract_address,
-                apikey: network_config.explorer_api_key,
-            },
-        })
-            .then((res) => res.data)
-            .then((json) => {
-                let abi: AbiItem[] = JSON.parse(json["result"])
-                resolve(abi);
-            });
-    })
-}
+// export async function getAbi(network_config: NetworkConfig): Promise<AbiItem[]> {
+//     return new Promise((resolve, _reject) => {
+//         axios.get(network_config.api_url, {
+//             headers: { 'Content-Type': 'application/json' },
+//             params: {
+//                 module: "contract",
+//                 action: "getabi",
+//                 address: network_config.contract_address.trim(),
+//                 apikey: network_config.explorer_api_key.trim(),
+//             },
+//         })
+//             .then((res) => res.data)
+//             .then((json) => {
+//                 console.log({ json });
+//                 let abi: AbiItem[] = JSON.parse(json["result"])
+//                 resolve(abi);
+//             });
+//     })
+// }
 
 
 export async function getContract(web3: Web3, network_config: NetworkConfig): Promise<Contract> {
-    const abi: AbiItem[] = await getAbi(network_config);
-    return new web3.eth.Contract(abi, network_config.contract_address);
+    // const abi: AbiItem[] = await getAbi(network_config);
+    return new web3.eth.Contract(abi_local, network_config.contract_address);
 }
 
 export async function makeContractCall(contracj_obj: Contract, method_name: string, params: any[]): Promise<void> {

@@ -1,21 +1,30 @@
 {
-    "default": "80001",
     "4": {
         "name": "Ethereum Testnet Rinkeby",
-        "explorer_api_key": "N9P3JIRRFQ54B8VQ39BC39ZS6255IVM3G8",
-        "explorer_url": "https://rinkeby.etherscan.io/",
-        "contract_address": "0x1AC54a5247AC82233F7748027Cb455fb44e99900",
-        "api_url": "https://api-rinkeby.etherscan.io/api",
-        "gateway_url": "https://rinkeby.infura.io/v3/cf4b61eb137e4e18af357f3e9eb6d518",
-        "native_coin_price_api": "https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD"
+        "gateway_url": "https://rinkeby.infura.io/v3/${WEB3_INFURA_PROJECT_ID}"
     },
     "80001": {
         "name": "Polygon Testnet Mumbai",
-        "explorer_api_key": "Y1MSAVW6A8CHTUIUWIS96EKKHMAJSD51JC",
-        "explorer_url": "https://mumbai.polygonscan.com/",
-        "contract_address": "0xaC62a86E7c1F9fEB8106AA616d71b4370d7bC9de",
-        "api_url": "https://api-testnet.polygonscan.com/api",
-        "gateway_url": "https://speedy-nodes-nyc.moralis.io/f7b24c6459c3159c348cfb3e/polygon/mumbai",
-        "native_coin_price_api": "https://min-api.cryptocompare.com/data/price?fsym=MATIC&tsyms=USD"
+        "gateway_url": "https://speedy-nodes-nyc.moralis.io/${WEB3_MORALIS_PROJECT_ID}/polygon/mumbai"
+    },
+    "43113": {
+        "name": "Avalanche Testnet Fuji",
+        "gateway_url": "https://speedy-nodes-nyc.moralis.io/${WEB3_MORALIS_PROJECT_ID}/avalanche/testnet"
+    },
+    "97": {
+        "name": "Binance Smart Chain Testnet ",
+        "gateway_url": "https://data-seed-prebsc-1-s1.binance.org:8545"
+    },
+    "421611": {
+        "name": "Arbitrum Rinkeby estnet",
+        "gateway_url": "https://arb-rinkeby.g.alchemy.com/v2/${WEB3_ALCHEMY_PROJECT_ID}"
+    },
+    "69": {
+        "name": "Optimism Testnet Kovan",
+        "gateway_url": "https://kovan.optimism.io"
+    },
+    "4002": {
+        "name": "Fantom Testnet Opera",
+        "gateway_url": "https://rpc.testnet.fantom.network"
     }
 }
