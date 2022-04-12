@@ -6,6 +6,7 @@ import { resolve } from 'url';
 var contract;
 
 var networksList;
+var refreshBtn;
 var connectBtn;
 var reloadBtn;
 var giveAccessBtn;
@@ -17,7 +18,9 @@ var accounts;
 
 var inputs;
 
-const refreshStats = async () => {
+
+const refreshStats = () => {
+
     let network_config;
     if (currentNetworkId in networks) {
         network_config = networks[currentNetworkId];
@@ -27,21 +30,30 @@ const refreshStats = async () => {
         document.getElementById("gasPrice").innerHTML = "[gasPrice]";
         return;
     }
-    let gasPrice = await getGasPrice();
-    let coinPrice = await getCoinPrice(network_config);
 
-    document.getElementById("gasPrice").innerHTML = `gas price is ${window.web3.utils.fromWei(gasPrice, "gwei")} gwei`;
-    document.getElementById("coinPrice").innerHTML = `coin price is $${coinPrice}`;
+    Promise.all([
+        getGasPrice(),
+        getCoinPrice(network_config),
+        contract.methods.giveAccess(accessInput.value, 600).estimateGas({
+            from: accounts[0],
+            gas: 20000000,
+            value: '0'
+        })
+    ]).then(x => {
+        let gas_price = x[0];
+        let coin_price = x[1];
+        let gas_amount = x[2];
+        let txn_price = window.web3.utils.fromWei("" + (gas_price * gas_amount), "ether");
+        let usd_per_txn = txn_price * coin_price;
+        let txn_per_usd = 1 / usd_per_txn;
 
-    contract.methods.giveAccess(accessInput.value, 600).estimateGas({
-        from: accounts[0],
-        gas: 2000000,
-        value: '0'
-    }).then(gasAmount => {
-        let txnPrice = window.web3.utils.fromWei("" + (gasPrice * gasAmount), "ether");
-        document.getElementById("transactionPrice").innerHTML = `gasAmount: ${gasAmount}, estimated fee: $${txnPrice * coinPrice} (${txnPrice}) `;
+        document.getElementById("gasPrice").innerHTML = `gas amount: ${gas_amount}, gas price: ${window.web3.utils.fromWei(gas_price, "gwei")} gwei, txn price: ${txn_price} ${network_config.coin}`;
+        document.getElementById("coinPrice").innerHTML = `coin price is: 1${network_config.coin} = $${coin_price}`;
+        document.getElementById("transactionPrice").innerHTML = `estimated fee: $${usd_per_txn}, txns per $1: ${Number(txn_per_usd.toFixed(0)).toLocaleString()}`;
+
     }).catch(error => {
-        // console.error(error);
+        console.error("refreshStats");
+        console.error(error);
     });
 }
 
@@ -64,17 +76,15 @@ const initialize = async () => {
         return false;
     }
 
-    document.getElementById("networkName").innerHTML = network_config.name;
+    document.getElementById("networkName").innerHTML = network_config.name + `[chain_id:${currentNetworkId}]`;
     document.getElementById("contractUrl").href = `${network_config.explorer_url}address/${network_config.contract_address}`;
     document.getElementById("contractUrl").innerHTML = "Contract@" + network_config.contract_address;
 
     (async () => {
         contract = await getContract(network_config);
         accounts = await window.web3.currentProvider.request({ method: 'eth_requestAccounts' });
+        refreshStats();
     })();
-
-
-
 
     inputs.forEach(x => x.disabled = false);
     return true;
@@ -114,6 +124,7 @@ const ethEnabled = async () => {
 }
 
 const main = async () => {
+    refreshBtn = document.getElementById("refreshBtn");
     connectBtn = document.getElementById("connect");
     reloadBtn = document.getElementById("reload");
     giveAccessBtn = document.getElementById("giveAccessBtn");
@@ -127,9 +138,11 @@ const main = async () => {
     });
     setupEventListeners();
 
-    setInterval(refreshStats, 1000)
 
 
+    refreshBtn.onclick = async () => {
+        refreshStats();
+    };
     checkAccessBtn.onclick = async () => {
         let address = accessInput.value;
         let accounts = await window.web3.currentProvider.request({ method: 'eth_requestAccounts' });

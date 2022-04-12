@@ -94,10 +94,11 @@ async function makeContractCall(contracj_obj, method_name, params) {
 }
 
 async function getGasPrice() {
-    let gasPrice = await window.web3.eth.getGasPrice().then((result) => {
-        return result;
-    });
-    return gasPrice;
+    // let gasPrice = await window.web3.eth.getGasPrice().then((result) => {
+    //     return result;
+    // });
+    // return gasPrice;
+    return window.web3.eth.getGasPrice();
 }
 
 export { networks, getGasPrice, getContract, getCoinPrice, makeContractCall }
