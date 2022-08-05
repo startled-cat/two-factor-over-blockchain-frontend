@@ -36,7 +36,7 @@ const refreshStats = () => {
         getCoinPrice(network_config),
         contract.methods.giveAccess(accessInput.value, 600).estimateGas({
             from: accounts[0],
-            gas: 20000000,
+            gas: 1000000,
             value: '0'
         })
     ]).then(x => {
@@ -49,7 +49,7 @@ const refreshStats = () => {
 
         document.getElementById("gasPrice").innerHTML = `gas amount: ${gas_amount}, gas price: ${window.web3.utils.fromWei(gas_price, "gwei")} gwei, txn price: ${txn_price} ${network_config.coin}`;
         document.getElementById("coinPrice").innerHTML = `coin price is: 1${network_config.coin} = $${coin_price}`;
-        document.getElementById("transactionPrice").innerHTML = `estimated fee: $${usd_per_txn}, txns per $1: ${Number(txn_per_usd.toFixed(0)).toLocaleString()}`;
+        document.getElementById("transactionPrice").innerHTML = `estimated fee: $${usd_per_txn}, ${Number(txn_per_usd.toFixed(0)).toLocaleString()}tx/$1`;
 
     }).catch(error => {
         console.error("refreshStats");
@@ -184,7 +184,6 @@ const main = async () => {
                 contract.methods.giveAccess(address, 600).send(options).on("confirmation", (confirmation, receipt, latestBlockHash) => {
                     if (confirmation <= 1) {
                         console.log({ confirmation });
-
                     }
                     if (confirmation == 1) {
                         resolve(receipt);

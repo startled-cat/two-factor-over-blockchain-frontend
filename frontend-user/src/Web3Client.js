@@ -11,8 +11,8 @@ const local_abi = abi_file["abi"]
 
 // var web3 = new Web3(network_config.gateway_url);
 
-const DEFAULT_GAS_LIMIT = "2000000";
-const map_url = "https://raw.githubusercontent.com/startled-cat/two-factor-over-blockchain/main/sample_contract/build/deployments/map.json";
+const DEFAULT_GAS_LIMIT = "1000000";
+const map_url = "https://raw.githubusercontent.com/startled-cat/two-factor-over-blockchain/main/passwordless_auth/build/deployments/map.json";
 const contract_name = "PasswordlessAuthentication";
 const coin_price_url = "https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD";
 
@@ -40,15 +40,11 @@ export async function loadOnlineContractConfig() {
     // get map from repo
     await axios.get(map_url).then(response => {
         if (response.status == 200) {
-            console.log("success");
             chain_to_contract_map = response.data;
-            console.log({ chain_to_contract_map });
-
         } else {
             throw new Error(`GET ${map_url} response status = ${response.status}`);
         }
     }).catch(error => {
-        console.error("error getting config grom url");
         chain_to_contract_map = {};
         console.error(error);
         throw new Error(error);
@@ -57,7 +53,7 @@ export async function loadOnlineContractConfig() {
     console.log({ networks });
 }
 
-coin_price_url
+// coin_price_url
 async function getCoinPrice(network_config) {
     return new Promise((resolve, reject) => {
         if ("coin" in network_config) {
@@ -71,7 +67,7 @@ async function getCoinPrice(network_config) {
                     console.error(error)
                 });
         } else {
-            console.warn("Missing coin from network config");
+            console.warn("Missing coin symbol from network config");
         }
 
     })
@@ -146,4 +142,3 @@ export { networks, getGasPrice, getContract, getCoinPrice, makeContractCall }
 //             });
 //     })
 // }
-
