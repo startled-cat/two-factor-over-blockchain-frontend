@@ -24,43 +24,42 @@
 <body>
 	<div class="container">
 		<button id="connect"
-				class="btn btn-primary">Connect web3</button>
-		<button id="reload"
-				class="btn btn-primary">Reload contract config</button>
+				class="btn btn-primary">Connect wallet</button>
+		<!-- <button id="reload"
+				class="btn btn-primary">Reload contract config</button> -->
 
+		<div class="network-info">
+			<h2>Using network:</h2>
+			<h3 id="networkName"> (network name) </h3>
+			<p>
+				Explore authentication contract: <a id="contractUrl"> (contract url) </a>
+			</p>
+			<p id="stats">
 
-		<h3 id="networkName"> ... </h3>
-		<p><a id="contractUrl"></a></p>
-
-		<div id="gasPrice"
-			 class=""></div>
-		<div id="coinPrice"
-			 class=""></div>
-		<div id="transactionPrice"
-			 class=""></div>
-		<button id="refreshBtn"
-				class="btn btn-primary">
-			Refresh stats
-		</button>
-
-
-
-		<div id="giveAccess">
-			<button id="checkAccessBtn"
+			</p>
+			<!-- <p id="gasPrice"
+				 class=""> (gasPrice) </p>
+			<p id="coinPrice"
+				 class=""> (coinPrice) </p>
+			<p id="transactionPrice"
+				 class=""> (transactionPrice) </p> -->
+			<button id="refreshBtn"
 					class="btn btn-primary">
-				Check if access given
-			</button><button id="giveAccessBtn"
-					class="btn btn-primary">
-				Give access to this address
+				Refresh stats
 			</button>
-			<input type="text"
-				   id="accessInput"
-				   value="0xD4D7593176b6C1015e0D8DF62E11a19e66912bFa">
 		</div>
-		<div id="givenAccess">
 
+		<div id="applications-wrapper">
+			<h2>
+				Applications:
+			</h2>
+			<div id="applications">
+			</div>
 		</div>
-		<div id="networks"></div>
+
+
+	</div>
+	<div id="networks"></div>
 	</div>
 </body>
 

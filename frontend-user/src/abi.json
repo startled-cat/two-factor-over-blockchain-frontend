@@ -9,7 +9,7 @@
                 },
                 {
                     "internalType": "address",
-                    "name": "website",
+                    "name": "application",
                     "type": "address"
                 }
             ],
@@ -28,7 +28,7 @@
             "inputs": [
                 {
                     "internalType": "address",
-                    "name": "website",
+                    "name": "application",
                     "type": "address"
                 },
                 {
@@ -40,6 +40,30 @@
             "name": "giveAccess",
             "outputs": [],
             "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
+            "inputs": [
+                {
+                    "internalType": "address",
+                    "name": "",
+                    "type": "address"
+                },
+                {
+                    "internalType": "address",
+                    "name": "",
+                    "type": "address"
+                }
+            ],
+            "name": "givenAccessUntill",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "",
+                    "type": "uint256"
+                }
+            ],
+            "stateMutability": "view",
             "type": "function"
         }
     ]

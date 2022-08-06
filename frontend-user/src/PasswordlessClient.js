@@ -1,5 +1,5 @@
 // import fetch from 'node-fetch';
-import Web3 from 'web3';
+// import Web3 from 'web3';
 import axios from "axios";
 
 
@@ -7,15 +7,13 @@ const networks = require("./networks.json");
 const abi_file = require("./abi.json");
 const map_file = require("./map.json");
 const local_abi = abi_file["abi"]
-// const network_config = networks[networks.default];
 
-// var web3 = new Web3(network_config.gateway_url);
-
-const DEFAULT_GAS_LIMIT = "1000000";
+// const DEFAULT_GAS_LIMIT = "1000000";
 const map_url = "https://raw.githubusercontent.com/startled-cat/two-factor-over-blockchain/main/passwordless_auth/build/deployments/map.json";
 const contract_name = "PasswordlessAuthentication";
 const coin_price_url = "https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD";
 
+var contract = null;
 
 function loadMap(chain_to_contract_map) {
     Object.keys(chain_to_contract_map).forEach(chain_id => {
@@ -74,30 +72,34 @@ async function getCoinPrice(network_config) {
 }
 
 async function getContract(network_config) {
-    return new window.web3.eth.Contract(local_abi, network_config.contract_address);
+    contract = new window.web3.eth.Contract(local_abi, network_config.contract_address)
+    return contract;
 }
 
-async function makeContractCall(contracj_obj, method_name, params) {
-    return new Promise((resolve, reject) => {
-        contracj_obj.methods[method_name](...params).call({
-            from: "",
-            gas: DEFAULT_GAS_LIMIT
-        }).then((result) => {
-            console.log({ method_name, result });
-            resolve(result);
-        })
-    })
-}
+// async function makeContractCall(contracj_obj, method_name, params) {
+//     return new Promise((resolve, reject) => {
+//         contracj_obj.methods[method_name](...params).call({
+//             from: "",
+//             gas: DEFAULT_GAS_LIMIT
+//         }).then((result) => {
+//             console.log({ method_name, result });
+//             resolve(result);
+//         })
+//     })
+// }
 
 async function getGasPrice() {
-    // let gasPrice = await window.web3.eth.getGasPrice().then((result) => {
-    //     return result;
-    // });
-    // return gasPrice;
     return window.web3.eth.getGasPrice();
 }
 
-export { networks, getGasPrice, getContract, getCoinPrice, makeContractCall }
+
+const checkIfUserGivenAccess = async (userAddresss, applicationAddress) => {
+    if (contract) {
+        return await contract.methods.checkAccess(userAddresss, applicationAddress).call();
+    }
+}
+
+export { networks, getGasPrice, getContract, getCoinPrice, checkIfUserGivenAccess}
 
 // async function makeContractTransaction(contracj_obj, method_name, params, account) {
 //     const methodCall = contracj_obj.methods[method_name](...params);

@@ -1,6 +1,6 @@
 {
     "1337": {
-        "name": "Ganache",
+        "name": "Ganache (development local blockchain)",
         "explorer_url": "",
         "coin": "ETH"
     },
@@ -64,7 +64,7 @@
         "explorer_url": "https://blockscout.com/poa/sokol/",
         "coin": "POA"
     },
-    "1313161555":{
+    "1313161555": {
         "name": "Aurora Testnet",
         "explorer_url": "https://testnet.aurorascan.dev/",
         "coin": "AUR"
