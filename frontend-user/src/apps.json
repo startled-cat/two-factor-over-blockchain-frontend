@@ -2,6 +2,7 @@
     "example-app-1":{
         "name":"Forum Web Application",
         "description":"Example application supporting authentication over blockchain",
+        "emoji":"📢",
         "url": "",
         "addresses":{
             "1337":"0x33A4622B82D4c04a53e170c638B944ce27cffce3",
@@ -12,18 +13,20 @@
         "name":"Shopping Web Application",
         "description":"Example application supporting authentication over blockchain",
         "url": "",
+        "emoji":"🛒",
         "addresses":{
             "1337":"0x0063046686E46Dc6F15918b61AE2B121458534a5",
-            "*": "0xD4D7593176b6C1015e0D8DF62E11a19e66912bFa"
+            "*": "0x1836E39dBd748316A46AaDbB3C85C6d54a795797"
         }
     },
     "example-app-3":{
         "name":"Social Web Application",
         "description":"Example application supporting authentication over blockchain",
         "url": "",
+        "emoji":"💬",
         "addresses":{
             "1337":"0x21b42413bA931038f35e7A5224FaDb065d297Ba3",
-            "*": "0xD4D7593176b6C1015e0D8DF62E11a19e66912bFa"
+            "*": "0xBBFC2Aa5904D1767EaC829B054a42ABf7EdE406f"
         }
     }
 }

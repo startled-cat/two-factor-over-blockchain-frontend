@@ -95,7 +95,13 @@ async function getGasPrice() {
 
 const checkIfUserGivenAccess = async (userAddresss, applicationAddress) => {
     if (contract) {
-        return await contract.methods.checkAccess(userAddresss, applicationAddress).call();
+        let result =  await contract.methods.checkAccess(userAddresss, applicationAddress).call();
+        if(result){
+            let timeLeft = await contract.methods.givenAccessUntill(userAddresss, applicationAddress).call();
+            return timeLeft;
+        }else{
+            return false;
+        }
     }
 }
 

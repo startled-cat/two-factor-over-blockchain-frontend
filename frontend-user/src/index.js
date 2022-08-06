@@ -10,11 +10,11 @@ var contract;
 
 var networksList;
 var applicationsElement;
-var applicationsAccessStatuselements;
+var applicationsAccessStatusElements;
 var applicationsGiveAccessBtnElements;
 var refreshBtn;
 var connectBtn;
-var accessInput;
+var accountAddress;
 var currentNetworkId = null;
 
 var accounts;
@@ -64,6 +64,14 @@ const refreshStats = () => {
         console.error("refreshStats");
         console.error(error);
     });
+    (async () => {
+        let accountBalance = await window.web3.eth.getBalance(accounts[0]);
+        accountBalance = window.web3.utils.fromWei(`${accountBalance}`, "ether");
+        accountAddress.innerHTML = `${accounts[0]} (${accountBalance} ETH)`;
+    })();
+
+
+
 }
 
 const initialize = async () => {
@@ -71,6 +79,10 @@ const initialize = async () => {
     document.getElementById("contractUrl").href = "#";
     document.getElementById("contractUrl").innerHTML = "";
 
+    if (!(currentNetworkId in networks)) {
+        console.warn("No network config found for current network id: " + currentNetworkId + ". Using default config.");
+        currentNetworkId = 1337;
+    }
 
     if (currentNetworkId in networks) {
         network_config = networks[currentNetworkId];
@@ -89,6 +101,7 @@ const initialize = async () => {
         accounts = await window.web3.currentProvider.request({ method: 'eth_requestAccounts' });
         refreshStats();
     })();
+
     return true;
 }
 
@@ -102,16 +115,16 @@ const ethEnabled = async () => {
         if (currentNetworkId == 1659742563159) {
             currentNetworkId = 1337
         }
-        console.log({ currentNetworkId });
+        console.log("Using window.ethereum");
 
         return true;
-    } else if (windows.web3) {
+    } else if (window.web3) {
         window.web3 = new Web3(window.web3.currentProvider)
         currentNetworkId = window.ethereum.networkVersion;
         if (currentNetworkId == 1659742563159) {
             currentNetworkId = 1337
         }
-        console.log({ currentNetworkId });
+        console.log("Using window.web3");
     }
 
     return false;
@@ -119,32 +132,59 @@ const ethEnabled = async () => {
 
 const refreshApplicationAccessStatus = async () => {
     console.log("refreshApplicationAccessStatus");
+    let anyAccessGiven = false;
 
     // for each element in applicationsAccessStatuselements, check if access was given and update element contents
-    Object.keys(applicationsAccessStatuselements).forEach(app => {
+    Object.keys(applicationsAccessStatusElements).forEach(app => {
         checkIfAccessGivenToApplication(app).then(result => {
-            if (result) {
-                applicationsAccessStatuselements[app].innerHTML = "Access given ✅";
-                applicationsAccessStatuselements[app].className = "access access-given";
-            } else {
-                applicationsAccessStatuselements[app].innerHTML = "Access not given ";
-                applicationsAccessStatuselements[app].className = "access access-not-given";
+            let newStatus = result ? "given" : "not given";
+            anyAccessGiven = anyAccessGiven || result;
+            if (result || newStatus != applicationsAccessStatusElements[app].status) {
+                applicationsAccessStatusElements[app].status = newStatus;
+                if (result) {
+                    let validDuration = ((result - Math.floor((Date.now() / 1000))) );
+                    if(validDuration < 0)validDuration = 0;
+                    let percentProgress = Math.floor(100*validDuration / giveAccessFor);
+                    let x = `
+                    <div class="progress">
+                    <div class="progress-bar bg-success" style="width: ${percentProgress}%"  role="progressbar" aria-label="${validDuration}s" aria-valuenow="${percentProgress}" aria-valuemin="0" aria-valuemax="100">${validDuration}s</div>
+                    </div>`;
+                    applicationsAccessStatusElements[app].info.innerHTML = x;
+                    applicationsAccessStatusElements[app].element.innerHTML = "✅ You can now sign in to app! ✅";
+                    applicationsAccessStatusElements[app].element.className = "access access-given disabled btn btn-outline-success";
+                    applicationsAccessStatusElements[app].giveAccessBtn.disabled = true;
+                } else {
+                    applicationsAccessStatusElements[app].element.innerHTML = "Access not given";
+                    applicationsAccessStatusElements[app].element.className = "access access-not-given disabled btn btn-outline-secondary";
+                    applicationsAccessStatusElements[app].giveAccessBtn.disabled = false;
+                }
             }
         }).catch(error => {
             console.error(error);
         });
     });
+
+    setTimeout(() => {
+        if (anyAccessGiven) {
+            refreshApplicationAccessStatus();
+        }
+    }, 1000);
 }
 
 
 const giveAccessToAplication = async (app) => {
     applicationsGiveAccessBtnElements[app].disabled = true;
 
-    let address = applications[app]["addresses"][currentNetworkId];
+    applicationsAccessStatusElements[app].element.innerHTML = "Continue in wallet ...";
+    applicationsAccessStatusElements[app].element.className = "access access-given disabled btn btn-outline-info";
+
+    let address = getApplicationAddress(app);
+
+    console.log({ address });
     // call method
     if (contract) {
         new Promise(async (resolve, reject) => {
-            let gasPrice = getGasPrice();
+            let gasPrice = await getGasPrice();
             let accounts = await window.web3.currentProvider.request({ method: 'eth_requestAccounts' });
             let options = {
                 from: accounts[0],
@@ -152,20 +192,36 @@ const giveAccessToAplication = async (app) => {
                 gasPrice: gasPrice,
                 value: '0'
             };
-            contract.methods.giveAccess(address, giveAccessFor).send(options).on("confirmation", (confirmation, receipt, latestBlockHash) => {
-                if (confirmation == requiredConfirmations) {
-                    resolve(receipt);
-                }
-            }).on("error", (error) => {
-                reject(error)
-            })
+            console.log({ options });
+
+            contract.methods.giveAccess(address, giveAccessFor).send(options)
+                .on("confirmation", (confirmation, receipt, latestBlockHash) => {
+                    if (confirmation <= requiredConfirmations) {
+                        applicationsAccessStatusElements[app].element.innerHTML = `Waiting for confirmation (${confirmation}/${requiredConfirmations})...`;
+                        console.log({ confirmation });
+                        if (confirmation == requiredConfirmations) {
+                            resolve(receipt);
+                        }
+                    }
+                }).on("error", (error) => {
+                    applicationsAccessStatusElements[app].element.innerHTML = "Error";
+                    reject(error)
+                }).on("transactionHash", (transactionHash) => {
+                    applicationsAccessStatusElements[app].element.innerHTML = "Waiting for confirmation ...";
+                    console.log({ transactionHash });
+                });
         }).then(receipt => {
             console.log({ receipt });
+            applicationsGiveAccessBtnElements[app].disabled = true;
         }).catch(err => {
-            console.error(err);
-            alert(err.message);
-        }).finally(() => {
             applicationsGiveAccessBtnElements[app].disabled = false;
+            console.error(err);
+            applicationsAccessStatusElements[app].element.innerHTML = "Error, try again";
+            applicationsAccessStatusElements[app].element.className = "access access-given disabled btn btn-outline-danger";
+            alert("Error giving access to application. Please try again.");
+        }).finally(() => {
+            
+            refreshApplicationAccessStatus();
         })
     }
 }
@@ -203,7 +259,8 @@ const main = async () => {
     connectBtn = document.getElementById("connect");
     networksList = document.getElementById("networks");
     applicationsElement = document.getElementById("applications");
-    applicationsAccessStatuselements = {};
+    accountAddress = document.getElementById("accountAddress");
+    applicationsAccessStatusElements = {};
     applicationsGiveAccessBtnElements = {};
 
     refreshBtn.onclick = async () => {
@@ -225,28 +282,28 @@ const main = async () => {
 
     // for each application, display its information and create a button
     Object.keys(applications).forEach(app => {
-        let appElement = document.createElement("div");
-        appElement.className = "app";
+        let appElement = document.createElement("li");
+
+        // let appEmoji = document.createElement("span");
+        // appEmoji.className = "emoji";
+        // appEmoji.innerHTML = applications[app].emoji;
+        // appElement.appendChild(appEmoji)
+
+        appElement.className = "list-group-item";
         let appName = document.createElement("h3");
-        appName.innerHTML = applications[app].name;
+        appName.innerHTML = `${applications[app].emoji} ${applications[app].name}`;
+        appName.onclick = async () => {
+            refreshApplicationAccessStatus();
+        }
         appElement.appendChild(appName);
         let appDescription = document.createElement("p");
         appDescription.innerHTML = applications[app].description;
         appElement.appendChild(appDescription);
 
-        // create a link to app
-        let appLink = document.createElement("a");
-        appLink.href = applications[app].url;
-        appLink.innerHTML = "Go to app";
-        appElement.appendChild(appLink);
-
-        // if access was given, display green checkmark, else display grey cross
-        let accessElement = document.createElement("div");
-        accessElement.className = "access";
-        applicationsAccessStatuselements[app] = accessElement;
-        applicationsAccessStatuselements[app].innerHTML = "loading...";
-        applicationsAccessStatuselements[app].className = "access access-not-given";
-        appElement.appendChild(accessElement);
+        // create button group
+        let appButtons = document.createElement("btn-group");
+        appButtons.className = "btn-group";
+        appElement.appendChild(appButtons);
 
         // create a button to give access
         let giveAccessBtn = document.createElement("button");
@@ -256,7 +313,25 @@ const main = async () => {
         giveAccessBtn.onclick = async () => {
             giveAccessToAplication(app)
         };
-        appElement.appendChild(giveAccessBtn);
+        appButtons.appendChild(giveAccessBtn);
+
+        // create an alert to display transaction information
+        let accessInfo = document.createElement("div");
+        accessInfo.className = "";
+        accessInfo.innerHTML = "";
+        appElement.appendChild(accessInfo);
+
+
+        let accessElement = document.createElement("button");
+        accessElement.innerHTML = "loading...";
+        accessElement.className = "access access-not-given btn btn-secondary";
+        applicationsAccessStatusElements[app] = {
+            "giveAccessBtn": giveAccessBtn,
+            "element": accessElement,
+            "status": null,
+            "info": accessInfo
+        };
+        appButtons.appendChild(accessElement);
 
 
 
@@ -274,12 +349,11 @@ window.addEventListener('load',
 
         // detect Network account change
         window.ethereum.on('chainChanged', async function (networkId) {
-            if (networkId == 1659742563159) {
-                networkId = 1337
-            }
             console.log('chainChanged', networkId);
             currentNetworkId = networkId;
             initialize();
+            refreshApplicationAccessStatus();
+
         });
 
         loadLocalContractConfig();
@@ -287,7 +361,7 @@ window.addEventListener('load',
         connectToWallet();
         refreshApplicationAccessStatus();
 
-        this.setInterval(refreshApplicationAccessStatus, 1000);
+        // this.setInterval(refreshApplicationAccessStatus, 1000);
     }, false);
 
 
