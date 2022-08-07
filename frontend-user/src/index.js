@@ -154,6 +154,7 @@ const refreshApplicationAccessStatus = async () => {
                     applicationsAccessStatusElements[app].element.className = "access access-given disabled btn btn-outline-success";
                     applicationsAccessStatusElements[app].giveAccessBtn.disabled = true;
                 } else {
+                    applicationsAccessStatusElements[app].info.innerHTML = "";
                     applicationsAccessStatusElements[app].element.innerHTML = "Access not given";
                     applicationsAccessStatusElements[app].element.className = "access access-not-given disabled btn btn-outline-secondary";
                     applicationsAccessStatusElements[app].giveAccessBtn.disabled = false;

@@ -1,7 +1,4 @@
-// import fetch from 'node-fetch';
-// import Web3 from 'web3';
 import axios from "axios";
-
 
 const networks = require("./networks.json");
 const abi_file = require("./abi.json");
@@ -27,11 +24,13 @@ function loadMap(chain_to_contract_map) {
         }
     });
 }
+
 export async function loadLocalContractConfig() {
     loadMap(map_file);
     console.log({ networks });
 
 }
+
 export async function loadOnlineContractConfig() {
 
     let chain_to_contract_map = {};
@@ -76,22 +75,9 @@ async function getContract(network_config) {
     return contract;
 }
 
-// async function makeContractCall(contracj_obj, method_name, params) {
-//     return new Promise((resolve, reject) => {
-//         contracj_obj.methods[method_name](...params).call({
-//             from: "",
-//             gas: DEFAULT_GAS_LIMIT
-//         }).then((result) => {
-//             console.log({ method_name, result });
-//             resolve(result);
-//         })
-//     })
-// }
-
 async function getGasPrice() {
     return window.web3.eth.getGasPrice();
 }
-
 
 const checkIfUserGivenAccess = async (userAddresss, applicationAddress) => {
     if (contract) {
@@ -106,47 +92,3 @@ const checkIfUserGivenAccess = async (userAddresss, applicationAddress) => {
 }
 
 export { networks, getGasPrice, getContract, getCoinPrice, checkIfUserGivenAccess}
-
-// async function makeContractTransaction(contracj_obj, method_name, params, account) {
-//     const methodCall = contracj_obj.methods[method_name](...params);
-//     let gas = 0;
-
-//     await methodCall.estimateGas({
-//         from: account.address,
-//         gas: DEFAULT_GAS_LIMIT,
-//         value: '0'
-//     }).then(gasAmount => {
-//         console.log({ gasAmount });
-//         gas = gasAmount;
-//     }).catch(error => {
-//         console.error(error);
-//     });
-
-//     const tx = {
-//         from: account.address,
-//         to: contracj_obj._address,
-//         gas: DEFAULT_GAS_LIMIT,
-//         value: '0',
-//         data: methodCall.encodeABI()
-//     };
-//     return new Promise(function (resolve, reject) {
-//         web3.eth.accounts.signTransaction(tx, account.privateKey)
-//             .then((signed) => {
-//                 web3.eth.sendSignedTransaction(signed.rawTransaction)
-//                     .on('transactionHash', (hash) => {
-//                         console.log({ msg: "transaction sent", transactionHash: hash });
-//                     })
-//                     // .on('receipt', (receipt) => {
-//                     //     console.log('transaction sent');
-//                     // })
-//                     .on('confirmation', (confirmationNumber, receipt) => {
-//                         if (confirmationNumber >= 1) {
-//                             resolve(receipt);
-//                         } else {
-//                             console.log({ msg: "transaction confirmed", confirmationNumber });
-//                         }
-//                     })
-//                     .on('error', console.error);
-//             });
-//     })
-// }
