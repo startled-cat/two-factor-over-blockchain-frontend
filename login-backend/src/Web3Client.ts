@@ -8,106 +8,28 @@ import { networks, NetworkConfig, accounts, abi_local } from './Config';
 
 export const DEFAULT_GAS_LIMIT = "2000000";
 
-
 export function loadAccounts(web3: Web3) {
     accounts.forEach(acc => {
         web3.eth.accounts.wallet.add(acc.pk);
     })
 }
+
 export function getWeb3(network_config: NetworkConfig): Web3 {
     return new Web3(network_config.gateway_url);
 }
 
-// export async function getCoinPrice(network_config: NetworkConfig): Promise<BigNumber> {
-//     return new Promise((resolve, _reject) => {
-//         axios.get(network_config.native_coin_price_api, {
-//             headers: { 'Content-Type': 'application/json' }
-//         })
-//             .then((res) => res.data)
-//             .then((json) => {
-//                 resolve(json["USD"]);
-//             });
-//     })
-// }
-
-// export async function getAbi(network_config: NetworkConfig): Promise<AbiItem[]> {
-//     return new Promise((resolve, _reject) => {
-//         axios.get(network_config.api_url, {
-//             headers: { 'Content-Type': 'application/json' },
-//             params: {
-//                 module: "contract",
-//                 action: "getabi",
-//                 address: network_config.contract_address.trim(),
-//                 apikey: network_config.explorer_api_key.trim(),
-//             },
-//         })
-//             .then((res) => res.data)
-//             .then((json) => {
-//                 console.log({ json });
-//                 let abi: AbiItem[] = JSON.parse(json["result"])
-//                 resolve(abi);
-//             });
-//     })
-// }
-
-
 export async function getContract(web3: Web3, network_config: NetworkConfig): Promise<Contract> {
-    // const abi: AbiItem[] = await getAbi(network_config);
     return new web3.eth.Contract(abi_local, network_config.contract_address);
 }
 
 export async function makeContractCall(contracj_obj: Contract, method_name: string, params: any[]): Promise<void> {
     await contracj_obj.methods[method_name](...params).call({
-        from: "",
+        from: "",// TODO: why is this empty?
         gas: DEFAULT_GAS_LIMIT
     }).then((result: any) => {
         console.log({ method_name, result });
     })
 }
-
-// async function makeContractTransaction(contracj_obj: Contract, method_name: string, params: any[], account) {
-//     const methodCall = contracj_obj.methods[method_name](...params);
-//     // let gas = 0;
-
-//     await methodCall.estimateGas({
-//         from: account.address,
-//         gas: DEFAULT_GAS_LIMIT,
-//         value: '0'
-//     }).then((gasAmount: any) => {
-//         console.log({ gasAmount });
-//         // gas = gasAmount;
-//     }).catch((error: any) => {
-//         console.error(error);
-//     });
-
-//     const tx = {
-//         from: account.address,
-//         to: contracj_obj._address,
-//         gas: DEFAULT_GAS_LIMIT,
-//         value: '0',
-//         data: methodCall.encodeABI()
-//     };
-//     return new Promise(function (resolve, _reject) {
-//         web3.eth.accounts.signTransaction(tx, account.privateKey)
-//             .then((signed) => {
-//                 web3.eth.sendSignedTransaction(signed.rawTransaction)
-//                     .on('transactionHash', (hash) => {
-//                         console.log({ msg: "transaction sent", transactionHash: hash });
-//                     })
-//                     // .on('receipt', (receipt) => {
-//                     //     console.log('transaction sent');
-//                     // })
-//                     .on('confirmation', (confirmationNumber, receipt) => {
-//                         if (confirmationNumber >= 1) {
-//                             resolve(receipt);
-//                         } else {
-//                             console.log({ msg: "transaction confirmed", confirmationNumber });
-//                         }
-//                     })
-//                     .on('error', console.error);
-//             });
-//     })
-// }
 
 export async function getGasPrice(web3: Web3): Promise<BigNumber> {
     const networkId = await web3.eth.net.getId();
@@ -118,6 +40,19 @@ export async function getGasPrice(web3: Web3): Promise<BigNumber> {
         return new BigNumber(result);
     });
     return gasPrice;
+}
+
+// call checkAccess contract method
+export async function checkAccess(web3: Web3, network_config: NetworkConfig, user: string, website: string): Promise<boolean> {
+    const contract = await getContract(web3, network_config);
+    const result = await contract.methods.checkAccess(user, website).call({ from: "", gas: DEFAULT_GAS_LIMIT });
+    return result;
+}
+
+// call receiveAccess contract method
+export async function receiveAccess(web3: Web3, network_config: NetworkConfig, user: string, website: string): Promise<void> {
+    const contract = await getContract(web3, network_config);
+    return contract.methods.receiveAccess(user).send({ from: website, gas: DEFAULT_GAS_LIMIT });
 }
 
 // export { web3, getCoinPrice, getAbi, getContract, makeContractCall, makeContractTransaction, getGasPrice }

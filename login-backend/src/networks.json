@@ -1,15 +1,19 @@
 {
+    "1337": {
+        "name": "Ganache",
+        "gateway_url": "http://localhost:8545"
+    },
     "4": {
         "name": "Ethereum Testnet Rinkeby",
-        "gateway_url": "https://rinkeby.infura.io/v3/${WEB3_INFURA_PROJECT_ID}"
+        "gateway_url": "https://eth-rinkeby.alchemyapi.io/v2/${RINKEBY_KEY}"
     },
     "80001": {
         "name": "Polygon Testnet Mumbai",
-        "gateway_url": "https://speedy-nodes-nyc.moralis.io/${WEB3_MORALIS_PROJECT_ID}/polygon/mumbai"
+        "gateway_url": "https://polygon-mumbai.infura.io/v3/${WEB3_INFURA_PROJECT_ID}"
     },
     "43113": {
         "name": "Avalanche Testnet Fuji",
-        "gateway_url": "https://speedy-nodes-nyc.moralis.io/${WEB3_MORALIS_PROJECT_ID}/avalanche/testnet"
+        "gateway_url": "https://api.avax-test.network/ext/bc/C/rpc"
     },
     "97": {
         "name": "Binance Smart Chain Testnet ",
@@ -17,7 +21,7 @@
     },
     "421611": {
         "name": "Arbitrum Rinkeby estnet",
-        "gateway_url": "https://arb-rinkeby.g.alchemy.com/v2/${WEB3_ALCHEMY_PROJECT_ID}"
+        "gateway_url": "https://rinkeby.arbitrum.io/rpc"
     },
     "69": {
         "name": "Optimism Testnet Kovan",
@@ -29,19 +33,19 @@
     },
     "42": {
         "name": "Ethereum Testnet Kovan",
-        "gateway_url": "https://kovan.infura.io/v3/${WEB3_ALCHEMY_PROJECT_ID}"
+        "gateway_url": "https://kovan.infura.io/v3/${KOVAN_KEY}"
     },
     "5": {
         "name": "Ethereum Testnet Görli",
-        "gateway_url": "https://goerli.infura.io/v3/${WEB3_ALCHEMY_PROJECT_ID}"
+        "gateway_url": "https://eth-goerli.g.alchemy.com/v2/${GOERLI_KEY}"
     },
     "3": {
         "name": "Ethereum Testnet Ropsten",
-        "gateway_url": "https://ropsten.infura.io/v3/${WEB3_ALCHEMY_PROJECT_ID}"
+        "gateway_url": "https://ropsten.infura.io/v3/${WEB3_INFURA_PROJECT_ID}"
     },
     "1666700000": {
         "name": "Harmony Testnet Shard 0",
-        "gateway_url": "https://api.s0.b.hmny.io"
+        "gateway_url": "https://api.s1.b.hmny.io"
     },
     "77": {
         "name": "xDai/POA Testnet Sokol",

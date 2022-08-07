@@ -8,11 +8,21 @@ const abi_file = require("./abi.json");
 export const abi_local: AbiItem[] = abi_file["abi"];
 const map_filename: string = "src/map.json";
 
+const GANACHE_CONTRACT = {
+    "chain_id": 1337,
+    "contract":{
+        "PasswordlessAuthentication":[
+            "0x3194cBDC3dbcd3E11a07892e7bA5c3394048Cc87"
+        ]
+    }
+    
+}
 export interface NetworkConfig {
     name: string,
     contract_address: string,
     gateway_url: string,
 }
+
 function getEnv(var_name: string, default_value?: string): string {
     let x = process.env[var_name];
     if (x === undefined) {
@@ -29,6 +39,10 @@ export const accounts = [
     {
         address: getEnv("ACCOUNT"),
         pk: getEnv("ACCOUNT_PK")
+    },
+    {
+        address: getEnv("ACCOUNT_LOCAL"),
+        pk: getEnv("ACCOUNT_LOCAL_PK")
     }
 ]
 
@@ -38,11 +52,17 @@ const replaceEnvVariables = (str: string) => {
     });
     return str
 }
+// interpolate env variables in network config
 Object.keys(networks).filter(x => x != "default").forEach(network_name => {
     Object.keys(networks[network_name]).forEach(option => {
         networks[network_name][option] = replaceEnvVariables(networks[network_name][option]);
     })
 })
+
+function injectGanacheNetworkConfig(chain_to_contract_map:any):any{
+    chain_to_contract_map[GANACHE_CONTRACT.chain_id] = GANACHE_CONTRACT.contract;
+    return chain_to_contract_map;
+}
 
 export async function loadContractConfig(force_update: boolean = false) {
     const url: string = getEnv("CHAIN_TO_CONTRACT_MAP_URL");
@@ -60,6 +80,7 @@ export async function loadContractConfig(force_update: boolean = false) {
         const data = fs.readFileSync(map_filename, { encoding: 'utf8', flag: 'r' });
         console.log("success");
         chain_to_contract_map = JSON.parse(data);
+        chain_to_contract_map = injectGanacheNetworkConfig(chain_to_contract_map);
     } catch (error) {
         console.log("error, loading config from url ...");
         // get map from repo
@@ -67,6 +88,7 @@ export async function loadContractConfig(force_update: boolean = false) {
             if (response.status == 200) {
                 console.log("success, saving config to file ...");
                 chain_to_contract_map = response.data;
+                chain_to_contract_map = injectGanacheNetworkConfig(chain_to_contract_map);
                 // save map to file
                 fs.writeFile(map_filename, JSON.stringify(chain_to_contract_map), 'utf8', function (err: any) {
                     if (err) {
@@ -81,6 +103,7 @@ export async function loadContractConfig(force_update: boolean = false) {
         }).catch(error => {
             console.error("error getting config grom url");
             chain_to_contract_map = {};
+            chain_to_contract_map = injectGanacheNetworkConfig(chain_to_contract_map);
             console.error(error);
             throw new Error(error);
         });
