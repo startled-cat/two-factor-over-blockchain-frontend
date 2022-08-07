@@ -19,6 +19,42 @@ const FAKE_LOGIN_DELAY: number = 10;
 //allow request body as json
 server.use(express.json());
 
+// allow cors for all requests
+server.use(function (_req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    next();
+});
+
+// log every request 
+server.use(function (req, _res, next) {
+    console.log(`[${req.method}] [${req.url}]`);
+    // if request is of methdo post, log body
+    if (req.method == "POST") {
+        console.log(req.body);
+    }
+
+    next();
+});
+
+// after every request, log response
+server.use(function (req, res, next) {
+    res.on("finish", function () {
+        console.log(`[${res.statusCode}] [${req.url}]`);
+    }).on("close", function () {
+        console.log(`[${res.statusCode}] [${req.url}]`);
+    }).on("error", function (err) {
+        console.log(`[${res.statusCode}] [${req.url}]`);
+        console.log(err);
+    }).on("end", function () {
+        console.log(`[${res.statusCode}] [${req.url}]`);
+    });
+    next();
+});
+
+
+
+
 function sleep(arg0: number) {
     return new Promise(resolve => setTimeout(resolve, arg0));
 }
@@ -179,7 +215,7 @@ interface LoginRequestBody {
 }
 // create login request
 server.post('/login', async (req, res) => {
-    let body:LoginRequestBody;
+    let body: LoginRequestBody;
     try {
         // parse request body as json
         body = req.body;
@@ -196,7 +232,7 @@ server.post('/login', async (req, res) => {
     // "authenticate" user
     let result = await authenticateUser(body.user.login, body.user.password);
     if (!result) {
-        res.status(400).send({ "error": "Invalid credentials" });
+        res.status(403).send({ "error": "Invalid credentials" });
         return;
     }
 
@@ -205,9 +241,9 @@ server.post('/login', async (req, res) => {
     let user_address = await getUserAddress(body.user.login);
     // get most recent login request for this user
     let last_login_request = login_requests.filter(r => r.user_address == user_address).sort((a, b) => b.created_at.getTime() - a.created_at.getTime())[0];
-    if (last_login_request){
-        if(last_login_request.status != LoginRequestStatus.CONSUMED){
-            res.status(400).send({ "error": "Cannto create another login request, while previous is not consumed" });
+    if (last_login_request) {
+        if (last_login_request.status != LoginRequestStatus.CONSUMED) {
+            res.status(406).send({ "error": "Cannot create another login request, while previous is not consumed" });
             return;
         }
     }
@@ -240,7 +276,7 @@ server.get('/login/:loginRequestId', async (req, res) => {
     let login_request_id = req.params.loginRequestId;
     let login_request = login_requests.find(lr => lr.id == login_request_id);
     if (!login_request) {
-        res.status(400).send({ "error": "Unknown login request id" });
+        res.status(404).send({ "error": "Unknown login request id" });
         return;
     }
     res.send(login_request);
@@ -318,7 +354,7 @@ async function processLoginRequest(login_request_id: String) {
     if (FAKE_LOGIN) {
         // sleep for some time
 
-        await sleep(FAKE_LOGIN_DELAY*1000);
+        await sleep(FAKE_LOGIN_DELAY * 1000);
         // set login request as completed
         login_request.status = LoginRequestStatus.COMPLETED;
         login_request.error = "";

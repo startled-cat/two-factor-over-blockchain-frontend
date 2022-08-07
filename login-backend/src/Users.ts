@@ -19,7 +19,10 @@ const users_database:User[] = [
 
 // function that authenticates users password
 export function authenticateUser(login: string, password: string): boolean {
+    console.log(`authenticating user ${login} ${password}`)
+    
     let user_record = users_database.find(x => x.login == login);
+    console.log({user_record})
     if (user_record == undefined) {
         return false;
     } else {

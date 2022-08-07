@@ -15,7 +15,7 @@ module.exports = {
 			"url": require.resolve("url/"),
 			"https": require.resolve("https-browserify"),
 			"http": require.resolve("stream-http"),
-			"crypto": require.resolve("crypto-browserify"),
+			// "crypto": require.resolve("crypto-browserify"),
 			"os": require.resolve("os-browserify/browser"),
 			"assert": require.resolve("assert/"),
 			"stream": require.resolve("stream-browserify"),
@@ -26,14 +26,14 @@ module.exports = {
 		path: path.resolve(__dirname, "dist"),
 		filename: "[name].[contenthash].js",
 		clean: true,
-		assetModuleFilename: "[name][ext]",
+		assetModuleFilename: 'images/[hash][ext][query]',
 	},
 	devtool: "source-map",
 	devServer: {
 		static: {
 			directory: path.resolve(__dirname, "dist"),
 		},
-		port: 3000,
+		port: 3002,
 		open: true,
 		hot: true,
 		compress: true,
@@ -50,25 +50,15 @@ module.exports = {
 					"sass-loader"
 				]
 			},
-			// {
-			// 	test: /\.js$/,
-			// 	exclude: /node_modules/,
-			// 	use: {
-			// 		loader: "babel-loader",
-			// 		options: {
-			// 			presets: ["@babel/preset-env"]
-			// 		}
-			// 	}
-			// },
 			{
 				test: /\.(png|svg|jpg|jpeg|gif)$/i,
-				type: "asset/resource",
+				type: "asset/inline",
 			}
 		]
 	},
 	plugins: [
 		new HtmlWebpackPlugin({
-			title: "BlockAuth - user page",
+			title: "Web App (using BlockAuth)",
 			filename: "index.html",
 			template: "src/template.html"
 		}),
