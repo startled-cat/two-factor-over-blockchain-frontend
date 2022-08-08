@@ -21,6 +21,10 @@ var accounts;
 
 var inputs;
 
+const sleep = async (duration) => {
+    return new Promise(resolve => setTimeout(resolve, duration));
+}
+
 
 const refreshStats = () => {
 
@@ -230,7 +234,21 @@ const giveAccessToAplication = async (app) => {
 
 const checkIfAccessGivenToApplication = async (application) => {
     let address = getApplicationAddress(application);
-    let accounts = await window.web3.currentProvider.request({ method: 'eth_requestAccounts' });
+
+    let accounts;
+    
+    // try to get accounts from web3
+    try {
+        accounts = await window.web3.currentProvider.request({ method: 'eth_requestAccounts' });
+    } catch (error) {
+        // console.warn(error);
+        // if error, try again, after waiting for a moment
+        await sleep(3000);
+        return checkIfAccessGivenToApplication(application);
+        
+    }
+
+
     return checkIfUserGivenAccess(accounts[0], address);
 }
 

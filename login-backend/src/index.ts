@@ -7,31 +7,40 @@ import { Contract } from 'web3-eth-contract';
 import { NetworkConfig, accounts, loadContractConfig, networks } from "./Config";
 import { DEFAULT_GAS_LIMIT, getContract, getWeb3, loadAccounts, makeContractCall } from './Web3Client';
 
-import { authenticateUser, getUserAddress } from './Users';
+import { authenticateUser, getUserAddress, getUserChainId } from './Users';
 
 
 const port = 3001;
 const server: express.Application = express()
 
 const FAKE_LOGIN: boolean = true;
-const FAKE_LOGIN_DELAY: number = 10;
+const FAKE_LOGIN_DELAY: number = 2;
+const VERBOSE = true;
+
+function log(message: any) {
+    if (VERBOSE) {
+        console.log(message);
+    }
+}
+
 
 //allow request body as json
 server.use(express.json());
 
-// allow cors for all requests
+// allow cors for all requests, and all methods
 server.use(function (_req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
     next();
 });
 
 // log every request 
 server.use(function (req, _res, next) {
-    console.log(`[${req.method}] [${req.url}]`);
+    console.info(`[${req.method}] [${req.url}]`);
     // if request is of methdo post, log body
     if (req.method == "POST") {
-        console.log(req.body);
+        console.info(req.body);
     }
 
     next();
@@ -40,14 +49,14 @@ server.use(function (req, _res, next) {
 // after every request, log response
 server.use(function (req, res, next) {
     res.on("finish", function () {
-        console.log(`[${res.statusCode}] [${req.url}]`);
+        console.info(`[${res.statusCode}] [${req.url}]`);
     }).on("close", function () {
-        console.log(`[${res.statusCode}] [${req.url}]`);
+        console.info(`[${res.statusCode}] [${req.url}]`);
     }).on("error", function (err) {
-        console.log(`[${res.statusCode}] [${req.url}]`);
-        console.log(err);
+        console.info(`[${res.statusCode}] [${req.url}]`);
+        console.info(err);
     }).on("end", function () {
-        console.log(`[${res.statusCode}] [${req.url}]`);
+        console.info(`[${res.statusCode}] [${req.url}]`);
     });
     next();
 });
@@ -94,48 +103,50 @@ interface LoginRequest {
     error: string,
     created_at: Date,
     updated_at: Date,
-
+    fake_login: boolean,
 }
+
 var login_requests: LoginRequest[] = []
 
 server.get('/', (_req, res) => {
     res.send({ networks: networks, accounts: accounts.map(acc => acc.address) });
 })
-server.get('/reload', async (_req, res) => {
-    await loadContractConfig(true);
-    res.send({ networks: networks });
-})
-server.get('/chain/:chainId', async (req, res) => {
-    let chain_id: string = req.params.chainId;
-    if (!(chain_id in networks)) {
-        res.status(400).send({ "error": "Unknown chainId" });
-        return;
-    }
-    let network_config = networks[chain_id];
-    let { web3, contract, account } = await setup(network_config);
-    res.send({ account: account.address, contract });
-})
 
-server.get('/chain/:chainId/check/:user', async (req, res) => {
-    let chain_id: string = req.params.chainId;
-    let user: string = req.params.user;
+// server.get('/reload', async (_req, res) => {
+//     await loadContractConfig(true);
+//     res.send({ networks: networks });
+// })
+// server.get('/chain/:chainId', async (req, res) => {
+//     let chain_id: string = req.params.chainId;
+//     if (!(chain_id in networks)) {
+//         res.status(400).send({ "error": "Unknown chainId" });
+//         return;
+//     }
+//     let network_config = networks[chain_id];
+//     let { web3, contract, account } = await setup(network_config);
+//     res.send({ account: account.address, contract });
+// })
 
-    if (!(chain_id in networks)) {
-        res.status(400).send({ "error": "Unknown chainId" });
-        return;
-    }
-    let network_config = networks[chain_id];
-    let { web3, contract, account } = await setup(network_config);
+// server.get('/chain/:chainId/check/:user', async (req, res) => {
+//     let chain_id: string = req.params.chainId;
+//     let user: string = req.params.user;
 
-    await contract.methods.checkAccess(user, account.address).call({
-        gas: DEFAULT_GAS_LIMIT
-    }).then((result: any) => {
-        console.log({ checkAccess: result });
-        res.send({ user: user, website: account.address, checkAccess: result })
-    }).catch((error: any) => {
-        res.status(400).send({ error })
-    })
-})
+//     if (!(chain_id in networks)) {
+//         res.status(400).send({ "error": "Unknown chainId" });
+//         return;
+//     }
+//     let network_config = networks[chain_id];
+//     let { web3, contract, account } = await setup(network_config);
+
+//     await contract.methods.checkAccess(user, account.address).call({
+//         gas: DEFAULT_GAS_LIMIT
+//     }).then((result: any) => {
+//         log({ checkAccess: result });
+//         res.send({ user: user, website: account.address, checkAccess: result })
+//     }).catch((error: any) => {
+//         res.status(400).send({ error })
+//     })
+// })
 
 // server.get('/chain/:chainId/checkAccess/:user/:website', async (req, res) => {
 //     let user: string = req.params.user;
@@ -143,64 +154,64 @@ server.get('/chain/:chainId/check/:user', async (req, res) => {
 //     await contract.methods.checkAccess(user, website).call({
 //         gas: DEFAULT_GAS_LIMIT
 //     }).then((result: any) => {
-//         console.log({ checkAccess: result });
+//         log({ checkAccess: result });
 //         res.send({ user: user, website: website, checkAccess: result })
 //     }).catch((error: any) => {
 //         res.status(400).send({ error })
 //     })
 // })
 
-server.get('/chain/:chainId/receive/:user', async (req, res) => {
-    let chain_id: string = req.params.chainId;
-    let user: string = req.params.user;
+// server.get('/chain/:chainId/receive/:user', async (req, res) => {
+//     let chain_id: string = req.params.chainId;
+//     let user: string = req.params.user;
 
-    if (!(chain_id in networks)) {
-        res.status(400).send({ "error": "Unknown chainId" });
-        return;
-    } let network_config = networks[chain_id];
+//     if (!(chain_id in networks)) {
+//         res.status(400).send({ "error": "Unknown chainId" });
+//         return;
+//     } let network_config = networks[chain_id];
 
-    let { web3, contract, account } = await setup(network_config);
+//     let { web3, contract, account } = await setup(network_config);
 
-    const methodCall = contract.methods.receiveAccess(user);
+//     const methodCall = contract.methods.receiveAccess(user);
 
-    await methodCall.estimateGas({
-        from: account.address,
-        gas: DEFAULT_GAS_LIMIT,
-        value: '0'
-    }).then((gasAmount: any) => {
-        console.log({ gasAmount });
-        // gas = gasAmount;
-    }).catch((error: any) => {
-        console.error(error);
-    });
+//     await methodCall.estimateGas({
+//         from: account.address,
+//         gas: DEFAULT_GAS_LIMIT,
+//         value: '0'
+//     }).then((gasAmount: any) => {
+//         log({ gasAmount });
+//         // gas = gasAmount;
+//     }).catch((error: any) => {
+//         console.error(error);
+//     });
 
-    new Promise<{ status: number, data: any }>((resolve, reject) => {
-        contract.methods.receiveAccess(user).send({
-            from: account.address,
-            gas: DEFAULT_GAS_LIMIT,
-            value: '0'
-        }).on("transactionHash ", (transactionHash: String) => {
-            console.log({ transactionHash })
-        }).on("receipt", (receipt: Object) => {
-            console.log({ receipt })
-        }).on("confirmation", (confirmation: Number, receipt: Object, _latestBlockHash: String) => {
+//     new Promise<{ status: number, data: any }>((resolve, reject) => {
+//         contract.methods.receiveAccess(user).send({
+//             from: account.address,
+//             gas: DEFAULT_GAS_LIMIT,
+//             value: '0'
+//         }).on("transactionHash ", (transactionHash: String) => {
+//             log({ transactionHash })
+//         }).on("receipt", (receipt: Object) => {
+//             log({ receipt })
+//         }).on("confirmation", (confirmation: Number, receipt: Object, _latestBlockHash: String) => {
 
-            if (confirmation <= 1) {
-                console.log({ confirmation });
-            }
-            if (confirmation == 1) {
-                resolve({ status: 200, data: receipt });
-            }
-        }).on("error", (error: Error) => {
-            console.error(error);
-            reject({ status: 500, data: error })
-        })
-    }).then(value => {
-        res.status(value.status).send(value.data);
-    }).catch(err => {
-        res.status(err.status).send(err.data);
-    })
-})
+//             if (confirmation <= 1) {
+//                 log({ confirmation });
+//             }
+//             if (confirmation == 1) {
+//                 resolve({ status: 200, data: receipt });
+//             }
+//         }).on("error", (error: Error) => {
+//             console.error(error);
+//             reject({ status: 500, data: error })
+//         })
+//     }).then(value => {
+//         res.status(value.status).send(value.data);
+//     }).catch(err => {
+//         res.status(err.status).send(err.data);
+//     })
+// })
 
 
 
@@ -238,10 +249,13 @@ server.post('/login', async (req, res) => {
 
 
     // get user from database
-    let user_address = await getUserAddress(body.user.login);
+    let user_address = getUserAddress(body.user.login);
+    // get chain id from database
+    let chain_id = getUserChainId(body.user.login);
     // get most recent login request for this user
     let last_login_request = login_requests.filter(r => r.user_address == user_address).sort((a, b) => b.created_at.getTime() - a.created_at.getTime())[0];
-    if (last_login_request) {
+    // if resuestexists and was created less than 1 minute ago
+    if (last_login_request && last_login_request.created_at.getTime() > Date.now() - 1000 * 60) {
         if (last_login_request.status != LoginRequestStatus.CONSUMED) {
             res.status(406).send({ "error": "Cannot create another login request, while previous is not consumed" });
             return;
@@ -253,12 +267,13 @@ server.post('/login', async (req, res) => {
     // create new login request
     let login_request: LoginRequest = {
         id: login_request_id,
-        chain_id: body.chain_id,
+        chain_id: chain_id.toString(),
         user_address: user_address,
         status: LoginRequestStatus.PENDING,
         error: "",
         created_at: new Date(),
-        updated_at: new Date()
+        updated_at: new Date(),
+        fake_login: body.user.login == "fake_user",
     }
     // append login request to array
     login_requests.push(login_request);
@@ -268,7 +283,7 @@ server.post('/login', async (req, res) => {
     // proces login request in a separete thread
     setTimeout(async () => {
         processLoginRequest(login_request_id);
-    }, 0);
+    }, 1000);
 });
 
 // view login request
@@ -331,7 +346,7 @@ server.delete('/login/:loginRequestId', async (req, res) => {
 
 
 async function processLoginRequest(login_request_id: String) {
-    console.log("Processing login request " + login_request_id);
+    log("Processing login request " + login_request_id);
     // get login request form array
     let possible_login_request = login_requests.find(request => request.id == login_request_id);
 
@@ -351,9 +366,8 @@ async function processLoginRequest(login_request_id: String) {
     login_request.updated_at = new Date();
 
 
-    if (FAKE_LOGIN) {
+    if (login_request.fake_login) {
         // sleep for some time
-
         await sleep(FAKE_LOGIN_DELAY * 1000);
         // set login request as completed
         login_request.status = LoginRequestStatus.COMPLETED;
@@ -368,8 +382,10 @@ async function processLoginRequest(login_request_id: String) {
     let is_access_granted = false;
     while (time_elapsed < max_time) {
         // check if user has access to website
+        log("Checking if user has access to website ... ");
         is_access_granted = await checkAccess(login_request.user_address, login_request.chain_id)
         if (is_access_granted) {
+            log("User has access to website");
             break;
         }
         // wait for 2 seconds
@@ -379,6 +395,7 @@ async function processLoginRequest(login_request_id: String) {
 
     // if access is not granted, complete login request with an error message
     if (!is_access_granted) {
+        log("User has no access to website");
         login_request.status = LoginRequestStatus.FAILED;
         login_request.error = "Access not granted";
         login_request.updated_at = new Date();
@@ -389,8 +406,10 @@ async function processLoginRequest(login_request_id: String) {
     time_elapsed = 0;
     let is_access_received = false;
     while (time_elapsed < max_time) {
-        let is_access_received = await receiveAccessFromUser(login_request.user_address, login_request.chain_id);
+        log("Trying to receive access from user ... ");
+        is_access_received = await receiveAccessFromUser(login_request.user_address, login_request.chain_id);
         if (is_access_received) {
+            log("Received access");
             break;
         }
         await sleep(sleep_time * 1000);
@@ -399,6 +418,7 @@ async function processLoginRequest(login_request_id: String) {
 
     // if access is not received, complete login request with an error message
     if (!is_access_received) {
+        log("User has no access to website");
         login_request.status = LoginRequestStatus.FAILED;
         login_request.error = "Access not received";
         login_request.updated_at = new Date();
@@ -406,6 +426,7 @@ async function processLoginRequest(login_request_id: String) {
     }
 
     // complete login request
+    log("Login request completed");
     login_request.status = LoginRequestStatus.COMPLETED;
     login_request.error = "";
     login_request.updated_at = new Date();
@@ -418,10 +439,10 @@ async function checkAccess(user_address: string, chain_id: string): Promise<bool
     return await contract.methods.checkAccess(user_address, account.address).call({
         gas: DEFAULT_GAS_LIMIT
     }).then((result: any) => {
-        console.log({ checkAccess: result });
+        log({ checkAccess: result });
         return result;
     }).catch((error: any) => {
-        console.error(error);
+        log(error);
         return false;
     })
 }
@@ -429,15 +450,15 @@ async function checkAccess(user_address: string, chain_id: string): Promise<bool
 async function receiveAccessFromUser(user_address: string, chain_id: string): Promise<boolean> {
     let network_config = networks[chain_id];
     let { web3, contract, account } = await setup(network_config);
-    return await contract.methods.receiveAccess(user_address).send({
+    return contract.methods.receiveAccess(user_address).send({
         from: account.address,
         gas: DEFAULT_GAS_LIMIT,
         value: '0'
     }).then((result: any) => {
-        console.log({ receiveAccess: result });
-        return true;
+        log({ receiveAccess: result });
+        return result.status == true;
     }).catch((error: any) => {
-        console.error(error);
+        log(error);
         return false;
     })
 }
@@ -446,6 +467,6 @@ async function receiveAccessFromUser(user_address: string, chain_id: string): Pr
 
 server.listen(port, async () => {
     await loadContractConfig();
-    console.log(`App is listening on port ${port}`);
+    log(`App is listening on port ${port}`);
 });
 
