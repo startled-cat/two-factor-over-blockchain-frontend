@@ -57,7 +57,7 @@ const refreshStats = () => {
         let usd_per_txn = txn_price * coin_price;
         let txn_per_usd = 1 / usd_per_txn;
 
-        let stats = `Estimated fee: $${usd_per_txn.toFixed(4)} (${txn_price} ${network_config.coin})`;
+        let stats = `Estimated fee: ${txn_price} ${network_config.coin} ($${usd_per_txn.toFixed(8)})`;
         document.getElementById("stats").innerHTML = stats;
 
         // document.getElementById("stats").innerHTML = `gas amount: ${gas_amount}, gas price: ${window.web3.utils.fromWei(gas_price, "gwei")} gwei, txn price: ${txn_price} ${network_config.coin}`;
@@ -71,7 +71,7 @@ const refreshStats = () => {
     (async () => {
         let accountBalance = await window.web3.eth.getBalance(accounts[0]);
         accountBalance = window.web3.utils.fromWei(`${accountBalance}`, "ether");
-        accountAddress.innerHTML = `${accounts[0]} (${accountBalance} ETH)`;
+        accountAddress.innerHTML = `${accounts[0]} (balance: ${accountBalance} ${network_config.coin})`;
     })();
 
 

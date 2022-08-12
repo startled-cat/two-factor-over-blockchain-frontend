@@ -116,16 +116,18 @@ server.get('/', (_req, res) => {
 //     await loadContractConfig(true);
 //     res.send({ networks: networks });
 // })
-// server.get('/chain/:chainId', async (req, res) => {
-//     let chain_id: string = req.params.chainId;
-//     if (!(chain_id in networks)) {
-//         res.status(400).send({ "error": "Unknown chainId" });
-//         return;
-//     }
-//     let network_config = networks[chain_id];
-//     let { web3, contract, account } = await setup(network_config);
-//     res.send({ account: account.address, contract });
-// })
+server.get('/chain/:chainId', async (req, res) => {
+    let chain_id: string = req.params.chainId;
+    console.log({chain_id});
+    console.log({keys: Object.keys(networks)});
+    if (!(chain_id in networks)) {
+        res.status(400).send({ "error": "Unknown chainId" });
+        return;
+    }
+    let network_config = networks[chain_id];
+    let { web3, contract, account } = await setup(network_config);
+    res.send({ account: account.address, contract });
+})
 
 // server.get('/chain/:chainId/check/:user', async (req, res) => {
 //     let chain_id: string = req.params.chainId;
@@ -235,10 +237,7 @@ server.post('/login', async (req, res) => {
         return;
     }
 
-    if (!(body.chain_id in networks)) {
-        res.status(400).send({ "error": "Unknown chainId" });
-        return;
-    }
+    
 
     // "authenticate" user
     let result = await authenticateUser(body.user.login, body.user.password);
@@ -251,7 +250,14 @@ server.post('/login', async (req, res) => {
     // get user from database
     let user_address = getUserAddress(body.user.login);
     // get chain id from database
-    let chain_id = getUserChainId(body.user.login);
+    let chain_id:string = body.chain_id;
+
+    if (!(chain_id in networks)) {
+        res.status(400).send({ "error": "Unknown chainId" });
+        return;
+    }
+
+    // let chain_id = getUserChainId(body.user.login).toString();
     // get most recent login request for this user
     let last_login_request = login_requests.filter(r => r.user_address == user_address).sort((a, b) => b.created_at.getTime() - a.created_at.getTime())[0];
     // if resuestexists and was created less than 1 minute ago
@@ -267,7 +273,7 @@ server.post('/login', async (req, res) => {
     // create new login request
     let login_request: LoginRequest = {
         id: login_request_id,
-        chain_id: chain_id.toString(),
+        chain_id: chain_id,
         user_address: user_address,
         status: LoginRequestStatus.PENDING,
         error: "",
@@ -360,6 +366,9 @@ async function processLoginRequest(login_request_id: String) {
     if (login_request.status != LoginRequestStatus.PENDING) {
         return;
     }
+    // print ifnormation abount login request
+    log(login_request);
+
 
     // start prcessing login request
     login_request.status = LoginRequestStatus.PROCESSING;
@@ -434,7 +443,10 @@ async function processLoginRequest(login_request_id: String) {
 }
 
 async function checkAccess(user_address: string, chain_id: string): Promise<boolean> {
-    let network_config = networks[chain_id];
+    if (!(chain_id in networks)) {
+        return false
+    }
+    let network_config = networks[chain_id];    
     let { web3, contract, account } = await setup(network_config);
     return await contract.methods.checkAccess(user_address, account.address).call({
         gas: DEFAULT_GAS_LIMIT
@@ -448,6 +460,9 @@ async function checkAccess(user_address: string, chain_id: string): Promise<bool
 }
 
 async function receiveAccessFromUser(user_address: string, chain_id: string): Promise<boolean> {
+    if (!(chain_id in networks)) {
+        return false;
+    }
     let network_config = networks[chain_id];
     let { web3, contract, account } = await setup(network_config);
     return contract.methods.receiveAccess(user_address).send({
@@ -469,4 +484,5 @@ server.listen(port, async () => {
     await loadContractConfig();
     log(`App is listening on port ${port}`);
 });
+
 

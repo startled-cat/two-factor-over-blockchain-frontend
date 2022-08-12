@@ -112,9 +112,11 @@ export async function loadContractConfig(force_update: boolean = false) {
     Object.keys(chain_to_contract_map).forEach(chain_id => {
         if (contract_name in chain_to_contract_map[chain_id]) {
             if (!(chain_id in networks)) {
-                networks[chain_id] = {};
+                // networks[chain_id] = {};
+                console.error(`missing network config for chain_id ${chain_id}`);
+            }else{
+                networks[chain_id].contract_address = chain_to_contract_map[chain_id]["" + contract_name][0];
             }
-            networks[chain_id].contract_address = chain_to_contract_map[chain_id]["" + contract_name][0];
         } else {
             console.warn(`Contract not deployed on network: ${chain_id}`)
         }

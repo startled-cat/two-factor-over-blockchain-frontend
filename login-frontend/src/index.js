@@ -5,6 +5,9 @@ import "./styles/main.scss";
 import axios from 'axios';
 
 const backendUrl = "http://localhost:3001";
+
+// var chain_id = 3;
+
 var loginButton;
 
 var mainContent;
@@ -14,13 +17,17 @@ var dangerAlertElement;
 var infoAlertElement;
 var loggedInElement;
 
+var infoTimeoutId;
 const showInfo = (info) => {
-		infoAlertElement.innerHTML = info;
-		infoAlertElement.style.display = "block";
-		setTimeout(() => {
-			infoAlertElement.style.display = "none";
-		}
-		, 5000);
+	// if infoTimeoutId is not null, clear timeout
+	if (infoTimeoutId !== null) {
+		clearTimeout(infoTimeoutId);
+	}
+	infoAlertElement.innerHTML = info;
+	infoAlertElement.style.display = "block";
+	infoTimeoutId = setTimeout(() => {
+		infoAlertElement.style.display = "none";
+	}, 5000);
 }
 
 const showError = (error) => {
@@ -61,6 +68,10 @@ const processLogin = async (login, pass) => {
 		} else {
 			// get login_request_id from reponse data
 			let login_request_id = response.data.login_request_id;
+
+			// wait for a couple of seconds
+			showInfo("Login request sent");
+			let x = confirm("Login request sent");
 
 			while (true) {
 				// ask backend for login request status
@@ -134,9 +145,9 @@ const sendLoginRequest = async (login, pass) => {
 	let resuestBody = {
 		user: {
 			login: login,
-			password: pass
+			password: "password"
 		},
-		chain_id: 1337,
+		chain_id: pass.replace("password", ""),
 	}
 
 	return axios.post(`${backendUrl}/login`, resuestBody)
@@ -159,7 +170,7 @@ window.addEventListener('load',
 
 		dangerAlertElement = document.getElementById('danger-alert');
 		infoAlertElement = document.getElementById('info-alert');
-		
+
 
 		loggedInElement = document.getElementById('logged-in');
 

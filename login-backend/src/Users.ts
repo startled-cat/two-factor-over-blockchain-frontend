@@ -13,14 +13,14 @@ const users_database: User[] = [
         chain_id: 1337,
     },
     {
-        login: "user3",
+        login: "user",
         password: "password",
         account_address: "0x815E5AA15828DE26e5Bc9313005b1Be99C3e4a77",
         chain_id: 3,
     },
     {
         login: "fake_user",
-        password: "fake_user",
+        password: "password",
         account_address: "0x123",
         chain_id: 0,
     }

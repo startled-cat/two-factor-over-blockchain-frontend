@@ -50,5 +50,13 @@
     "77": {
         "name": "xDai/POA Testnet Sokol",
         "gateway_url": "https://sokol.poa.network"
+    },
+    "1666900000": {
+        "name": "Harmony Testnet Shard 0",
+        "gateway_url": "https://api.s2.b.hmny.io"
+    },
+    "1313161555": {
+        "name": "Aurora Testnet",
+        "gateway_url": "https://aurora-testnet.alchemyapi.io/v2/${AURORA_KEY}"
     }
 }
