@@ -17,7 +17,7 @@
     "421611": {
         "name": "Arbitrum Testnet Rinkeby",
         "explorer_url": "http://testnet.arbiscan.io/",
-        "coin": "ARB"
+        "coin": "ETH"
     },
     "97": {
         "name": "Binance Smart Chain Testnet",
