@@ -58,7 +58,7 @@ module.exports = {
 	},
 	plugins: [
 		new HtmlWebpackPlugin({
-			title: "Web App (using BlockAuth)",
+			title: "Web App (using BlockAuthenticator)",
 			filename: "index.html",
 			template: "src/template.html"
 		}),

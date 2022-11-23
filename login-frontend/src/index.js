@@ -68,17 +68,14 @@ const processLogin = async (login, pass) => {
 		} else {
 			// get login_request_id from reponse data
 			let login_request_id = response.data.login_request_id;
-
-			// wait for a couple of seconds
 			showInfo("Login request sent");
-			let x = confirm("Login request sent");
 
 			while (true) {
 				// ask backend for login request status
 				let loginRequestStatus = await sendLoginRequestStatusRequest(login_request_id);
 				console.log({ "sendLoginRequestStatusRequest": loginRequestStatus });
 				// show status in info alert
-				showInfo(`Login request status: ${loginRequestStatus}`);
+				showInfo(`Token verification status: ${loginRequestStatus}`);
 
 				if (loginRequestStatus === "COMPLETED") {
 
@@ -96,9 +93,8 @@ const processLogin = async (login, pass) => {
 					}
 					break;
 				} else if (loginRequestStatus === "PENDING" || loginRequestStatus === "PROCESSING") {
-					// wait
-					// sleep for 1 second
-					await new Promise(resolve => setTimeout(resolve, 1000));
+					// sleep 
+					await new Promise(resolve => setTimeout(resolve, 200));
 					// do nothing
 				} else if (loginRequestStatus === "ERROR") {
 					// show error

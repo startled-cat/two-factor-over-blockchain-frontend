@@ -5,11 +5,11 @@
     },
     "4": {
         "name": "Ethereum Testnet Rinkeby",
-        "gateway_url": "https://eth-rinkeby.alchemyapi.io/v2/${RINKEBY_KEY}"
+        "gateway_url": "https://rpc.ankr.com/eth_rinkeby"
     },
     "80001": {
         "name": "Polygon Testnet Mumbai",
-        "gateway_url": "https://polygon-mumbai.infura.io/v3/${WEB3_INFURA_PROJECT_ID}"
+        "gateway_url": "https://matic-mumbai.chainstacklabs.com"
     },
     "43113": {
         "name": "Avalanche Testnet Fuji",
@@ -41,7 +41,7 @@
     },
     "3": {
         "name": "Ethereum Testnet Ropsten",
-        "gateway_url": "https://ropsten.infura.io/v3/${WEB3_INFURA_PROJECT_ID}"
+        "gateway_url": "https://rpc.ankr.com/eth_ropsten"
     },
     "1666700000": {
         "name": "Harmony Testnet Shard 0",

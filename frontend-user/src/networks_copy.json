@@ -29,9 +29,19 @@
         "explorer_url": "https://testnet.snowtrace.io/",
         "coin": "AVAX"
     },
+    "69": {
+        "name": "Optimism Testnet Kovan",
+        "explorer_url": "https://testnet.snowtrace.io/",
+        "coin": "ETH"
+    },
     "4002": {
         "name": "Fantom Testnet Opera",
         "explorer_url": "https://testnet.ftmscan.com/",
+        "coin": "ETH"
+    },
+    "42": {
+        "name": "Ethereum Testnet Kovan",
+        "explorer_url": "https://kovan.etherscan.io/",
         "coin": "ETH"
     },
     "5": {
@@ -43,6 +53,16 @@
         "name": "Ethereum Testnet Ropsten",
         "explorer_url": "https://ropsten.etherscan.io/",
         "coin": "ETH"
+    },
+    "1666900000": {
+        "name": "Harmony Devnet Shard 0",
+        "explorer_url": "https://explorer.ps.hmny.io/",
+        "coin": "ONE"
+    },
+    "77": {
+        "name": "xDai/POA Testnet Sokol",
+        "explorer_url": "https://blockscout.com/poa/sokol/",
+        "coin": "POA"
     },
     "1313161555": {
         "name": "Aurora Testnet",

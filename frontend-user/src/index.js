@@ -3,7 +3,7 @@ import { networks, getContract, getGasPrice, getCoinPrice, loadLocalContractConf
 import "./styles/main.scss";
 
 const applications = require("./apps.json");
-const requiredConfirmations = 2;
+const requiredConfirmations = 0;
 const giveAccessFor = 600;
 
 var contract;
@@ -20,6 +20,9 @@ var currentNetworkId = null;
 var accounts;
 
 var inputs;
+
+var STATUS_NOT_VALID = 0
+var STATUS_VALID = 1
 
 const sleep = async (duration) => {
     return new Promise(resolve => setTimeout(resolve, duration));
@@ -135,44 +138,49 @@ const ethEnabled = async () => {
 }
 
 const refreshApplicationAccessStatus = async () => {
-    console.log("refreshApplicationAccessStatus");
-    let anyAccessGiven = false;
+    // console.log("refreshApplicationAccessStatus");
+    // let anyAccessGiven = false;
 
     // for each element in applicationsAccessStatuselements, check if access was given and update element contents
     Object.keys(applicationsAccessStatusElements).forEach(app => {
-        checkIfAccessGivenToApplication(app).then(result => {
-            let newStatus = result ? "given" : "not given";
-            anyAccessGiven = anyAccessGiven || result;
-            if (result || newStatus != applicationsAccessStatusElements[app].status) {
-                applicationsAccessStatusElements[app].status = newStatus;
-                if (result) {
-                    let validDuration = ((result - Math.floor((Date.now() / 1000))) );
-                    if(validDuration < 0)validDuration = 0;
-                    let percentProgress = Math.floor(100*validDuration / giveAccessFor);
-                    let x = `
+        checkIfAccessGivenToApplication(app)
+            .then(result => {
+                let newStatus = result ? STATUS_VALID : STATUS_NOT_VALID;
+                // anyAccessGiven = anyAccessGiven || result;
+                if (result || newStatus != applicationsAccessStatusElements[app].status) {
+                    if (applicationsAccessStatusElements[app].status == STATUS_VALID && newStatus == STATUS_NOT_VALID) {
+                        applicationsAccessStatusElements[app].log.innerHTML += 'Token received by app! <br />'
+                    }
+                    applicationsAccessStatusElements[app].status = newStatus;
+                    if (result) {
+                        let validDuration = ((result - Math.floor((Date.now() / 1000))));
+                        if (validDuration < 0) validDuration = 0;
+                        let percentProgress = Math.floor(100 * validDuration / giveAccessFor);
+                        let x = `
                     <div class="progress">
                     <div class="progress-bar bg-success" style="width: ${percentProgress}%"  role="progressbar" aria-label="${validDuration}s" aria-valuenow="${percentProgress}" aria-valuemin="0" aria-valuemax="100">${validDuration}s</div>
                     </div>`;
-                    applicationsAccessStatusElements[app].info.innerHTML = x;
-                    applicationsAccessStatusElements[app].element.innerHTML = "✅ You can now sign in to app! ✅";
-                    applicationsAccessStatusElements[app].element.className = "access access-given disabled btn btn-outline-success";
-                    applicationsAccessStatusElements[app].giveAccessBtn.disabled = true;
-                } else {
-                    applicationsAccessStatusElements[app].info.innerHTML = "";
-                    applicationsAccessStatusElements[app].element.innerHTML = "Access not given";
-                    applicationsAccessStatusElements[app].element.className = "access access-not-given disabled btn btn-outline-secondary";
-                    applicationsAccessStatusElements[app].giveAccessBtn.disabled = false;
+                        applicationsAccessStatusElements[app].info.innerHTML = x;
+                        applicationsAccessStatusElements[app].element.innerHTML = "✅ You can now sign in to app! ✅";
+                        applicationsAccessStatusElements[app].element.className = "access access-given disabled btn btn-outline-success";
+                        applicationsAccessStatusElements[app].giveAccessBtn.disabled = true;
+                    } else {
+                        applicationsAccessStatusElements[app].info.innerHTML = "";
+                        applicationsAccessStatusElements[app].element.className = "access access-not-given disabled btn btn-outline-secondary";
+                        applicationsAccessStatusElements[app].element.innerHTML = "Token does not exist";
+                        applicationsAccessStatusElements[app].giveAccessBtn.disabled = false;
+                    }
                 }
-            }
-        }).catch(error => {
-            console.error(error);
-        });
+
+            }).catch(error => {
+                console.error(error);
+            });
     });
 
     setTimeout(() => {
-        if (anyAccessGiven) {
-            refreshApplicationAccessStatus();
-        }
+        // if (anyAccessGiven || true) {
+        refreshApplicationAccessStatus();
+        // }
     }, 1000);
 }
 
@@ -213,6 +221,8 @@ const giveAccessToAplication = async (app) => {
                     reject(error)
                 }).on("transactionHash", (transactionHash) => {
                     applicationsAccessStatusElements[app].element.innerHTML = "Waiting for confirmation ...";
+                    let url = `${networks[currentNetworkId].explorer_url}tx/${transactionHash}`;
+                    applicationsAccessStatusElements[app].log.innerHTML += `tx: <a href="${url}">${transactionHash}</a> <br/>`;
                     console.log({ transactionHash });
                 });
         }).then(receipt => {
@@ -225,7 +235,7 @@ const giveAccessToAplication = async (app) => {
             applicationsAccessStatusElements[app].element.className = "access access-given disabled btn btn-outline-danger";
             alert("Error giving access to application. Please try again.");
         }).finally(() => {
-            
+
             refreshApplicationAccessStatus();
         })
     }
@@ -236,7 +246,7 @@ const checkIfAccessGivenToApplication = async (application) => {
     let address = getApplicationAddress(application);
 
     let accounts;
-    
+
     // try to get accounts from web3
     try {
         accounts = await window.web3.currentProvider.request({ method: 'eth_requestAccounts' });
@@ -245,7 +255,7 @@ const checkIfAccessGivenToApplication = async (application) => {
         // if error, try again, after waiting for a moment
         await sleep(3000);
         return checkIfAccessGivenToApplication(application);
-        
+
     }
 
 
@@ -270,10 +280,23 @@ const getApplicationAddress = (application) => {
     return addresses["*"];
 }
 
+const changeChain = async (newChainId) => {
+    try {
+        await window.ethereum.request({
+          method: 'wallet_switchEthereumChain',
+          params: [{ chainId: web3.utils.toHex(newChainId) }]
+        });
+      } catch (err) {
+        // This error code indicates that the chain has not been added to MetaMask
+        console.error("Could not connect to chain " + newChainId)
+      }
+
+}
 
 
 
 const main = async () => {
+    
     refreshBtn = document.getElementById("refreshBtn");
     connectBtn = document.getElementById("connect");
     networksList = document.getElementById("networks");
@@ -292,11 +315,22 @@ const main = async () => {
     let network_ids = Object.keys(networks).filter(x => !x.includes("default"));
     console.log({ network_ids });
 
-    let x = "";
+    let list = document.createElement("div")
     Object.keys(networks).forEach(chain_id => {
-        x += `<li>${networks[chain_id].name} (${chain_id})</li>`
+        let b = document.createElement("button")
+        b.innerHTML = `${networks[chain_id].name} (${chain_id})`
+        b.onclick = () => changeChain(chain_id)
+        if (chain_id == window.ethereum.networkVersion || chain_id == currentNetworkId){
+            b.className = "btn w-100"
+            b.disabled = true
+        }else{
+            b.className = "btn w-100 btn-outline-primary"
+        }
+        
+        list.appendChild(b)
     })
-    networksList.innerHTML = `Suported networks: <ul>${x}</ul>`;
+    networksList.innerHTML = `Suported networks: `;
+    networksList.appendChild(list)
 
 
     // for each application, display its information and create a button
@@ -316,7 +350,7 @@ const main = async () => {
         }
         appElement.appendChild(appName);
         let appDescription = document.createElement("p");
-        appDescription.innerHTML = applications[app].description;
+        appDescription.innerHTML = applications[app].description + `<br/>(app address: ${applications[app].addresses["*"]})`;
         appElement.appendChild(appDescription);
 
         // create button group
@@ -326,7 +360,7 @@ const main = async () => {
 
         // create a button to give access
         let giveAccessBtn = document.createElement("button");
-        giveAccessBtn.innerHTML = "Give access";
+        giveAccessBtn.innerHTML = "Create token";
         giveAccessBtn.className = "btn btn-primary";
         applicationsGiveAccessBtnElements[app] = giveAccessBtn;
         giveAccessBtn.onclick = async () => {
@@ -340,6 +374,11 @@ const main = async () => {
         accessInfo.innerHTML = "";
         appElement.appendChild(accessInfo);
 
+        // log
+        let accessLog = document.createElement("div")
+        accessLog.className = "";
+        accessLog.innerHTML = "";
+        appElement.appendChild(accessLog);
 
         let accessElement = document.createElement("button");
         accessElement.innerHTML = "loading...";
@@ -348,7 +387,8 @@ const main = async () => {
             "giveAccessBtn": giveAccessBtn,
             "element": accessElement,
             "status": null,
-            "info": accessInfo
+            "info": accessInfo,
+            "log": accessLog
         };
         appButtons.appendChild(accessElement);
 
@@ -366,14 +406,15 @@ window.addEventListener('load',
             console.log('accountsChanges', accounts);
         });
 
-        // detect Network account change
         window.ethereum.on('chainChanged', async function (networkId) {
             console.log('chainChanged', networkId);
             currentNetworkId = networkId;
-            initialize();
-            refreshApplicationAccessStatus();
+            window.location.reload(true);
+            // initialize();
+            // refreshApplicationAccessStatus();
 
         });
+
 
         loadLocalContractConfig();
         main();
